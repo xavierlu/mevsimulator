@@ -1,6 +1,6 @@
 import json
 import requests
-import pandas as pd
+# import pandas as pd
 
 from web3 import Web3 
 
@@ -19,7 +19,7 @@ target_topics = [
 
 txn_list = {}
 
-for block_number in range(start_block_number - 1, start_block_number + 50):
+for block_number in range(start_block_number - 1, start_block_number):
     if block_number not in txn_list:
         txn_list[block_number] = []
     block = json.loads(Web3.toJSON(w3.eth.get_block(block_number, False)))
@@ -35,6 +35,32 @@ for block_number in range(start_block_number - 1, start_block_number + 50):
                 break
 
 print(txn_list)
+
+for block_number in txn_list:
+    txns = txn_list[block_number]
+    for txn_hash in txns:
+        txn_data = json.loads(Web3.toJSON(w3.eth.get_transaction(txn_hash)))
+        print(str(hex(block_number - 1)))
+        simulate_txn_input = {
+            "jsonrpc":"2.0",
+            "method": "eth_call",
+            "params": [
+                {
+                    "to": txn_data['to'],
+                    "data": txn_data['input']
+                },
+                str(hex(block_number - 1))
+            ],
+            "id": 1
+        }
+
+        r = requests.post("localhost:8545", data=simulate_txn_input, headers={"Content-Type": "application/json"})
+        print(r.json())
+        # call = w3.eth.call(simulate_txn_input, block_number - 1)
+
+        # print(call)
+
+     
 
 # curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0xccd9db", true],"id":1}' localhost:8545
 # curl -X POST 
